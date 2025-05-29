@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Channel Share Formatter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #4285F4;
+            --dark-blue: #1A73E8;
+            --light-blue: #E8F0FE;
+            --success-green: #34A853;
+            --dark-green: #0D822D;
+            --error-red: #EA4335;
+            --dark-red: #C5221F;
+            --background-light: #F8F9FA;
+            --container-bg: #FFFFFF;
+            --text-dark: #3C4043;
+            --text-medium: #5F6368;
+            --text-light: #9AA0A6;
+            --border-light: #DADCE0;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-dark);
+            padding: 20px; /* Add some padding for smaller screens */
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 50px; /* Increased padding */
+            border-radius: 18px; /* More rounded corners */
+            box-shadow: 0 15px 40px var(--shadow-medium); /* Stronger shadow */
+            text-align: center;
+            width: 100%;
+            max-width: 900px; /* Slightly wider container */
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: var(--dark-blue);
+            margin-bottom: 45px; /* Increased margin */
+            font-size: 2.8em; /* Larger heading */
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            /* New effects for the main header */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Subtle text shadow */
+            transition: all 0.3s ease-in-out; /* Smooth transition for effects */
+        }
+
+        h1:hover {
+            color: var(--primary-blue); /* Change color on hover */
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3); /* Slightly more prominent shadow on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+
+        .upload-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Center items for better responsiveness */
+            gap: 35px; /* Increased gap */
+            margin-bottom: 55px;
+        }
+
+        .upload-box {
+            background-color: #F0F4F8; /* Lighter background for boxes */
+            border: 2px dashed var(--border-light);
+            border-radius: 15px;
+            padding: 35px;
+            width: 380px; /* Slightly wider upload boxes */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px; /* Increased gap */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            box-sizing: border-box;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); /* Subtle initial shadow */
+        }
+
+        .upload-box:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            background-color: #E3F0FF; /* Very light blue on hover */
+        }
+
+        .upload-box h2 {
+            color: var(--text-dark);
+            font-size: 1.8em;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-button {
+            background: linear-gradient(145deg, var(--primary-blue), var(--dark-blue)); /* Gradient */
+            color: white;
+            padding: 16px 35px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1.15em;
+            letter-spacing: 0.8px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+            border: none; /* Remove default border */
+        }
+
+        .upload-button:hover {
+            background: linear-gradient(145deg, var(--dark-blue), var(--primary-blue)); /* Reverse gradient on hover */
+            transform: translateY(-5px); /* More pronounced lift */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .file-name {
+            font-size: 1.05em;
+            color: var(--text-medium);
+            word-break: break-all;
+            text-align: center;
+            padding: 0 15px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .column-selection-section {
+            background-color: var(--light-blue);
+            border: 1px solid var(--primary-blue);
+            border-radius: 12px;
+            padding: 30px 40px; /* Increased padding */
+            margin-bottom: 50px;
+            text-align: left;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .column-selection-section h2 {
+            color: var(--dark-blue);
+            font-size: 1.6em;
+            margin-top: 0;
+            margin-bottom: 25px; /* Increased margin */
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px 50px; /* Adjusted gap */
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            font-size: 1.15em;
+            color: var(--text-dark);
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 12px;
+            width: 20px; /* Larger checkbox */
+            height: 20px;
+            accent-color: var(--primary-blue); /* Custom checkbox color */
+            cursor: pointer;
+            border-radius: 4px; /* Slightly rounded checkbox */
+        }
+
+        .process-button {
+            background: linear-gradient(145deg, var(--success-green), var(--dark-green)); /* Gradient */
+            color: white;
+            padding: 20px 45px; /* Larger button */
+            border: none;
+            border-radius: 12px; /* More rounded */
+            font-size: 1.4em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 35px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .process-button:hover:not(:disabled) {
+            background: linear-gradient(145deg, var(--dark-green), var(--success-green)); /* Reverse gradient on hover */
+            transform: translateY(-6px); /* More pronounced lift */
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .process-button:disabled {
+            background-color: #CFD8DC; /* Lighter gray for disabled */
+            cursor: not-allowed;
+            opacity: 0.8;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .output-message {
+            margin-top: 45px; /* Increased margin */
+            padding: 30px; /* Increased padding */
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.2em;
+            text-align: center;
+            line-height: 1.8;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .output-message.processing {
+            background-color: #FFFDE7; /* Light yellow */
+            color: #A1887F; /* Brownish-gray */
+            border: 1px solid #FFEB3B; /* More vibrant border */
+        }
+
+        .output-message.success {
+            background-color: #E8F5E9; /* Light green */
+            color: var(--success-green);
+            border: 1px solid var(--dark-green);
+        }
+
+        .output-message.error {
+            background-color: #FFEBEE; /* Light red */
+            color: var(--error-red);
+            border: 1px solid var(--dark-red);
+        }
+        .output-message.info {
+            background-color: var(--light-blue);
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+
+            h1 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+
+            .upload-section {
+                flex-direction: column;
+                align-items: center;
+                gap: 25px;
+            }
+
+            .upload-box {
+                width: 100%; /* Full width on smaller screens */
+                padding: 25px;
+            }
+
+            .upload-box h2 {
+                font-size: 1.4em;
+            }
+
+            .upload-button {
+                padding: 12px 25px;
+                font-size: 1em;
+            }
+
+            .column-selection-section {
+                padding: 20px;
+            }
+
+            .column-selection-section h2 {
+                font-size: 1.3em;
+            }
+
+            .checkbox-group {
+                flex-direction: column;
+                align-items: flex-start; /* Align checkboxes to the left */
+                gap: 15px;
+            }
+
+            .process-button {
+                padding: 15px 30px;
+                font-size: 1.1em;
+            }
+
+            .output-message {
+                font-size: 1em;
+                padding: 20px;
+            }
+        }
+
+        .note-text {
+            font-size: 0.9em;
+            color: var(--text-medium);
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Channel Share Formatter</h1>
+
+        <div class="upload-section">
+            <div class="upload-box">
+                <h2>Upload Genre Lookup Sheet</h2>
+                <input type="file" id="genreLookupSheet" accept=".xls,.xlsx">
+                <label for="genreLookupSheet" class="upload-button">Choose File</label>
+                <span id="genreLookupFileName" class="file-name">No file chosen</span>
+            </div>
+
+            <div class="upload-box">
+                <h2>Upload Channel Share Dump</h2>
+                <input type="file" id="mainPlanSheet" accept=".xls,.xlsx">
+                <label for="mainPlanSheet" class="upload-button">Choose File</label>
+                <span id="mainPlanFileName" class="file-name">No file chosen</span>
+                <p class="note-text">
+                    Please rename the TG column in dump as 'Brand', Buying TG as 'Buying' and M15+ ABCDE as 'M15+'.<br>
+                    **Also, ensure the relevant sheet in your Channel Share dump is named 'Dump'.**
+                </p>
+            </div>
+        </div>
+
+        <div class="column-selection-section">
+            <h2>Select Columns to Add from Lookup Sheet</h2>
+            <div class="checkbox-group">
+                <label class="checkbox-item">
+                    <input type="checkbox" id="addGenre" value="Genre" checked> Genre
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="addSubGenre" value="Sub-Genre" checked> Sub-Genre
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="addBroadGenre" value="Broad-Genre"> Broad-Genre
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="addFTANFTA" value="FTA/NFTA"> FTA/NFTA
+                </label>
+            </div>
+        </div>
+
+        <button id="processSheetsBtn" class="process-button" disabled>Process Sheets</button>
+
+        <div id="outputMessage" class="output-message info">
+            Please upload both Excel sheets (Genre Lookup and Channel Share Dump) to proceed.
+        </div>
+    </div>
+
+    <script>
+        const genreLookupSheetInput = document.getElementById('genreLookupSheet');
+        const mainPlanSheetInput = document.getElementById('mainPlanSheet');
+        const genreLookupFileNameSpan = document.getElementById('genreLookupFileName');
+        const mainPlanFileNameSpan = document.getElementById('mainPlanFileName');
+        const processSheetsBtn = document.getElementById('processSheetsBtn');
+        const outputMessageDiv = document.getElementById('outputMessage');
+
+        const addGenreCheckbox = document.getElementById('addGenre');
+        const addSubGenreCheckbox = document.getElementById('addSubGenre');
+        const addBroadGenreCheckbox = document.getElementById('addBroadGenre');
+        const addFTANFTACheckbox = document.getElementById('addFTANFTA');
+
+        // Function to update file name display and check button state
+        function updateFileNameAndCheckButton(inputElement, fileNameSpan) {
+            if (inputElement.files.length > 0) {
+                fileNameSpan.textContent = inputElement.files[0].name;
+            } else {
+                fileNameSpan.textContent = 'No file chosen';
+            }
+            checkFilesForButton();
+        }
+
+        // Function to enable/disable process button based on file selection
+        function checkFilesForButton() {
+            if (genreLookupSheetInput.files.length > 0 && mainPlanSheetInput.files.length > 0) {
+                processSheetsBtn.disabled = false;
+                outputMessageDiv.className = 'output-message info';
+                outputMessageDiv.innerHTML = "Both files selected! Now select columns and click 'Process Sheets'.";
+            } else {
+                processSheetsBtn.disabled = true;
+                outputMessageDiv.className = 'output-message info';
+                outputMessageDiv.innerHTML = "Please upload both Excel sheets (Genre Lookup and Channel Share Dump) to proceed.";
+            }
+        }
+
+        // Event listeners for file input changes
+        genreLookupSheetInput.addEventListener('change', () => updateFileNameAndCheckButton(genreLookupSheetInput, genreLookupFileNameSpan));
+        mainPlanSheetInput.addEventListener('change', () => updateFileNameAndCheckButton(mainPlanSheetInput, mainPlanFileNameSpan));
+
+        // Helper function to normalize a string for consistent key matching
+        function normalizeString(str) {
+            if (typeof str !== 'string') return String(str || '').trim().replace(/\s+/g, ' ').toLowerCase(); // Ensure it's a string before processing, handle null/undefined
+            // Remove all non-alphanumeric characters except '+' and '-'
+            // Then replace all whitespace characters with a single space, trim, and convert to lowercase
+            return str.replace(/[^\p{L}\p{N}+-]/gu, '') // Keep letters, numbers, +, -
+                      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                      .trim() // Trim leading/trailing spaces
+                      .toLowerCase(); // Convert to lowercase
+        }
+
+        // Helper function to read a sheet and return data as array of objects with normalized keys
+        function readSheetData(workbook, sheetName, requiredColsForDetection = []) {
+            const sheet = workbook.Sheets[sheetName];
+            if (!sheet) {
+                throw new Error(`Sheet '${sheetName}' not found in the workbook.`);
+            }
+
+            // Read the entire sheet as an array of arrays, getting raw values
+            const aoaData = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, range: undefined });
+
+            if (aoaData.length === 0) {
+                console.warn(`--- DEBUG WARNING: Sheet '${sheetName}' is empty. ---`);
+                return []; // Empty sheet
+            }
+
+            let headerRowIndex = -1;
+            let finalNormalizedHeaders = [];
+            // Search in first 100 rows or less if sheet is smaller
+            const maxHeaderSearchRows = Math.min(aoaData.length, 100);
+
+            console.log(`--- DEBUG LOG: Scanning for header row in sheet '${sheetName}' up to row ${maxHeaderSearchRows} ---`);
+            const normalizedRequiredCols = requiredColsForDetection.map(normalizeString);
+            console.log(`--- DEBUG LOG: Required columns for detection (normalized):`, normalizedRequiredCols);
+
+
+            // Search for the header row
+            for (let i = 0; i < maxHeaderSearchRows; i++) {
+                const currentRow = aoaData[i];
+                // Log the raw content of the current row for deep debugging
+                console.log(`--- DEBUG LOG: Raw content of row ${i}:`, JSON.stringify(currentRow)); // Use JSON.stringify for raw content
+
+                if (!currentRow || currentRow.length === 0) {
+                    console.log(`--- DEBUG LOG: Row ${i} is empty or undefined, skipping. ---`);
+                    continue;
+                }
+
+                const currentNormalizedHeaders = currentRow.map(cell => normalizeString(cell));
+                console.log(`--- DEBUG LOG: Row ${i} content (normalized):`, currentNormalizedHeaders);
+
+                // Check if all required columns are present in this row
+                const allRequiredFound = normalizedRequiredCols.every(normalizedReqCol => {
+                    const isFound = currentNormalizedHeaders.includes(normalizedReqCol);
+                    if (!isFound) {
+                        // Log which specific required column was not found in this row
+                        const originalReqCol = requiredColsForDetection[normalizedRequiredCols.indexOf(normalizedReqCol)];
+                        console.error(`--- DEBUG ERROR: Required column '${originalReqCol}' (normalized: '${normalizedReqCol}') NOT found in row ${i}.`);
+                        console.error(`--- DEBUG ERROR: Available headers in row ${i} (normalized):`, currentNormalizedHeaders);
+                    }
+                    return isFound;
+                });
+
+                if (allRequiredFound) {
+                    headerRowIndex = i;
+                    finalNormalizedHeaders = currentNormalizedHeaders;
+                    console.log(`--- DEBUG LOG: Headers found at row ${headerRowIndex}:`, finalNormalizedHeaders);
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1) {
+                // If required columns were specified for detection, throw a specific error
+                if (requiredColsForDetection.length > 0) {
+                    throw new Error(`Could not find all required columns (${requiredColsForDetection.join(', ')}) in the first ${maxHeaderSearchRows} rows of sheet '${sheetName}'. Please ensure headers are present and correctly spelled.`);
+                } else {
+                    // Fallback: if no specific required columns were given, assume the first non-empty row is headers
+                    // This case should ideally not be hit if requiredColsForDetection is always provided for critical sheets.
+                    for (let i = 0; i < aoaData.length; i++) {
+                        if (aoaData[i] && aoaData[i].length > 0) {
+                            headerRowIndex = i;
+                            finalNormalizedHeaders = aoaData[i].map(cell => normalizeString(cell));
+                            console.warn(`--- DEBUG WARNING: No specific required columns for detection in sheet '${sheetName}'. Assuming first non-empty row (${headerRowIndex}) is headers:`, finalNormalizedHeaders);
+                            break;
+                        }
+                    }
+                    if (headerRowIndex === -1) { // Still no headers found
+                        console.error(`--- DEBUG ERROR: No identifiable header row found in sheet '${sheetName}'. ---`);
+                        return []; // Sheet is entirely empty or has no identifiable headers
+                    }
+                }
+            }
+
+            // Process data rows starting from after the identified header row
+            const dataObjects = [];
+            for (let i = headerRowIndex + 1; i < aoaData.length; i++) {
+                const row = aoaData[i];
+                const obj = {};
+                finalNormalizedHeaders.forEach((header, index) => {
+                    // Use raw value from aoaData, then convert to string if necessary for consistency
+                    obj[header] = (row[index] !== undefined && row[index] !== null) ? String(row[index]) : '';
+                });
+                dataObjects.push(obj);
+            }
+
+            console.log(`--- DEBUG LOG: Successfully extracted ${dataObjects.length} data rows from sheet '${sheetName}'. ---`);
+            return dataObjects;
+        }
+
+
+        // Event listener for the process button
+        processSheetsBtn.addEventListener('click', async () => {
+            console.log("--- DEBUG LOG: Process Sheets button clicked ---");
+
+            if (genreLookupSheetInput.files.length === 0 || mainPlanSheetInput.files.length === 0) {
+                outputMessageDiv.className = 'output-message error';
+                outputMessageDiv.textContent = 'Error: Please select both Excel files before processing.';
+                console.log("--- DEBUG LOG: Files not selected, exiting ---");
+                return;
+            }
+
+            // Get selected columns from checkboxes
+            const selectedLookupColumns = [];
+            if (addGenreCheckbox.checked) selectedLookupColumns.push('Genre');
+            if (addSubGenreCheckbox.checked) selectedLookupColumns.push('Sub-Genre');
+            if (addBroadGenreCheckbox.checked) selectedLookupColumns.push('Broad-Genre');
+            if (addFTANFTACheckbox.checked) selectedLookupColumns.push('FTA/NFTA');
+
+            console.log("--- DEBUG LOG: Selected Lookup Columns:", selectedLookupColumns, "---");
+
+            if (selectedLookupColumns.length === 0) {
+                outputMessageDiv.className = 'output-message error';
+                outputMessageDiv.textContent = 'Error: Please select at least one column to add from the lookup sheet.';
+                console.log("--- DEBUG LOG: No columns selected, exiting ---");
+                return;
+            }
+
+            outputMessageDiv.textContent = 'Preparing to read files...';
+            outputMessageDiv.className = 'output-message processing';
+            processSheetsBtn.disabled = true; // Disable button while processing
+
+            console.log("--- DEBUG LOG: Starting file reading promises ---");
+
+            try {
+                // Define required columns in their normalized (lowercase, single-space) form
+                const requiredMainPlanColumns = ['channel', 'regions', 'brand', 'buying', 'm15+'];
+                const requiredGenreLookupColumns = ['channel']; // Only 'channel' is strictly required for lookup
+
+                // Read Genre Lookup Sheet
+                const genreLookupFile = genreLookupSheetInput.files[0];
+                const genreLookupReader = new FileReader();
+                const genreLookupPromise = new Promise((resolve, reject) => {
+                    genreLookupReader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            console.log("--- DEBUG LOG: Genre Lookup file loaded into ArrayBuffer ---");
+                            outputMessageDiv.textContent = 'Parsing Genre Lookup file... This might take a moment for large files.';
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            console.log("--- DEBUG LOG: Workbook Sheet Names for Genre Lookup:", workbook.SheetNames);
+                            const firstSheetName = workbook.SheetNames[0];
+                            // Use the new helper function with required columns for detection
+                            const genreData = readSheetData(workbook, firstSheetName, requiredGenreLookupColumns);
+
+                            console.log("--- DEBUG LOG: Genre Lookup data parsed and keys normalized ---");
+                            resolve(genreData);
+                        } catch (error) {
+                            console.error("--- DEBUG ERROR: Error in Genre Lookup Reader onload ---", error);
+                            reject(new Error('Failed to read Genre Lookup Sheet: ' + error.message));
+                        }
+                    };
+                    genreLookupReader.onerror = (error) => {
+                        console.error("--- DEBUG ERROR: FileReader error for Genre Lookup Sheet ---", error);
+                        reject(new Error('Error reading Genre Lookup Sheet file.'));
+                    }
+                    genreLookupReader.readAsArrayBuffer(genreLookupFile);
+                    outputMessageDiv.textContent = 'Reading Genre Lookup file...';
+                    console.log("--- DEBUG LOG: Initiated readAsArrayBuffer for Genre Lookup ---");
+                });
+
+                // Read Main Plan Sheet (Channel Share Dump)
+                const mainPlanFile = mainPlanSheetInput.files[0];
+                const mainPlanReader = new FileReader();
+                const mainPlanPromise = new Promise((resolve, reject) => {
+                    mainPlanReader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            console.log("--- DEBUG LOG: Channel Share Dump file loaded into ArrayBuffer ---");
+                            outputMessageDiv.textContent = 'Parsing Channel Share Dump... This might take a moment for large files.';
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            console.log("--- DEBUG LOG: Workbook Sheet Names for Channel Share Dump:", workbook.SheetNames);
+                            const mainPlanSheetName = 'Dump'; // Targeting the 'Dump' sheet
+                            const mainPlanObjects = readSheetData(workbook, mainPlanSheetName, requiredMainPlanColumns);
+                            console.log("--- DEBUG LOG: Channel Share Dump data parsed to objects with normalized keys ---");
+                            resolve(mainPlanObjects);
+                        } catch (error) {
+                            console.error("--- DEBUG ERROR: Error in Main Plan Reader onload ---", error);
+                            reject(new Error('Failed to read Channel Share Dump: ' + error.message));
+                        }
+                    };
+                    mainPlanReader.onerror = (error) => {
+                        console.error("--- DEBUG ERROR: FileReader error for Main Plan Sheet ---", error);
+                        reject(new Error('Error reading Channel Share Dump file.'));
+                    }
+                    mainPlanReader.readAsArrayBuffer(mainPlanFile);
+                    outputMessageDiv.textContent = 'Reading Channel Share Dump...';
+                    console.log("--- DEBUG LOG: Initiated readAsArrayBuffer for Main Plan ---");
+                });
+
+                // Wait for both files to be read
+                const [genreLookupObjects, mainPlanObjects] = await Promise.all([genreLookupPromise, mainPlanPromise]);
+                outputMessageDiv.textContent = 'Files loaded. Processing data...';
+                outputMessageDiv.className = 'output-message processing';
+                console.log("--- DEBUG LOG: Both files read successfully ---");
+                console.log("Genre Lookup Data (first 5 rows):", genreLookupObjects.slice(0,5));
+                console.log("Main Plan Data (first 5 rows):", mainPlanObjects.slice(0,5));
+
+
+                if (mainPlanObjects.length === 0) {
+                    throw new Error("Channel Share Dump is empty or has no data rows after headers.");
+                }
+
+                // Check if the required columns were actually found in the main plan objects
+                const firstMainPlanRowKeys = Object.keys(mainPlanObjects[0] || {});
+                requiredMainPlanColumns.forEach(col => {
+                    if (!firstMainPlanRowKeys.includes(col)) {
+                        throw new Error(`Required column '${col}' not found in Channel Share Dump after processing. Please ensure column names are spelled correctly and consider the renaming note below the upload box.`);
+                    }
+                });
+
+                // Check if the 'channel' column was actually found in the genre lookup objects
+                const firstGenreLookupRowKeys = Object.keys(genreLookupObjects[0] || {});
+                if (!firstGenreLookupRowKeys.includes('channel')) {
+                     throw new Error(`Required column 'channel' not found in Genre Lookup Sheet after processing. Please ensure the 'Channel' column exists.`);
+                }
+
+
+                // Create a map for quick genre lookup
+                const genreMap = new Map();
+                genreLookupObjects.forEach(row => {
+                    const channel = row.channel ? String(row.channel).trim() : null;
+                    if (channel === null || channel === '') {
+                        console.warn("Skipping row in Genre Lookup Sheet due to missing or empty 'channel':", row);
+                        return;
+                    }
+                    const channelInfo = {};
+                    selectedLookupColumns.forEach(col => {
+                        const normalizedLookupCol = normalizeString(col);
+                        if (row.hasOwnProperty(normalizedLookupCol) && row[normalizedLookupCol] !== undefined && row[normalizedLookupCol] !== null) {
+                            channelInfo[col] = String(row[normalizedLookupCol]);
+                        } else {
+                            channelInfo[col] = 'N/A';
+                            if (selectedLookupColumns.includes(col)) {
+                                console.warn(`Column '${col}' missing, undefined, or null for channel '${channel}' in Genre Lookup Sheet row:`, row);
+                            }
+                        }
+                    });
+                    console.log(`--- DEBUG LOG: Populating genreMap for channel '${channel}'. channelInfo before set:`, channelInfo);
+                    genreMap.set(channel, channelInfo);
+                });
+                console.log("--- DEBUG LOG: genreMap created, size:", genreMap.size, "---");
+
+                // Process data rows from Main Plan (now using objects with normalized keys)
+                const processedRows = [];
+                mainPlanObjects.forEach(rowData => {
+                    const channel = String(rowData.channel || '').trim();
+                    const region = String(rowData.regions || '').trim();
+                    const brandShare = parseFloat(rowData.brand) || 0;
+                    const buyingShare = parseFloat(rowData.buying) || 0;
+                    const m15plusShare = parseFloat(rowData['m15+']) || 0;
+
+                    const genreInfo = genreMap.get(channel);
+                    console.log(`--- DEBUG LOG: Retrieved genreInfo for channel '${channel}':`, genreInfo);
+
+                    // Dynamically get genre and sub-genre based on selection, default to N/A if not found or not selected
+                    const genre = (addGenreCheckbox.checked && genreInfo?.Genre) ? genreInfo.Genre : 'N/A';
+                    const subGenre = (addSubGenreCheckbox.checked && genreInfo?.['Sub-Genre']) ? genreInfo['Sub-Genre'] : 'N/A';
+                    const broadGenre = (addBroadGenreCheckbox.checked && genreInfo?.['Broad-Genre']) ? genreInfo['Broad-Genre'] : 'N/A';
+                    const ftaNfta = (addFTANFTACheckbox.checked && genreInfo?.['FTA/NFTA']) ? genreInfo['FTA/NFTA'] : 'N/A';
+
+                    const affinity = (m15plusShare !== 0) ? (brandShare / m15plusShare) * 100 : 0;
+
+                    processedRows.push({
+                        Channel: channel,
+                        Genre: genre,
+                        'Sub-Genre': subGenre,
+                        'Broad-Genre': broadGenre,
+                        'FTA/NFTA': ftaNfta,
+                        Brand: brandShare,
+                        Buying: buyingShare,
+                        'M15+': m15plusShare,
+                        Affinity: affinity,
+                        Region: region
+                    });
+                });
+                console.log("--- DEBUG LOG: Main Plan data processed, first 5 rows of structured output:", processedRows.slice(0,5), "---");
+
+                // Group data by Region
+                const regionalData = {};
+                processedRows.forEach(row => {
+                    const regionName = row.Region || 'Uncategorized';
+                    if (!regionalData[regionName]) {
+                        regionalData[regionName] = [];
+                    }
+                    regionalData[regionName].push(row);
+                });
+                console.log("--- DEBUG LOG: Data grouped by regions. Number of regions:", Object.keys(regionalData).length, "---");
+
+                // Sort data within each region by Brand, Buying, M15+ in descending order
+                for (const regionName in regionalData) {
+                    regionalData[regionName].sort((a, b) => {
+                        if (b.Brand !== a.Brand) return b.Brand - a.Brand;
+                        if (b.Buying !== a.Buying) return b.Buying - a.Buying;
+                        return b['M15+'] - a['M15+'];
+                    });
+                    console.log(`--- DEBUG LOG: Data for region '${regionName}' sorted. ---`);
+                }
+
+                // Generate a new Excel workbook with multiple sheets
+                console.log("--- DEBUG LOG: Generating new Excel workbook with regional sheets ---");
+                const wb = XLSX.utils.book_new();
+
+                // *** Dynamically construct outputHeaders based on selected checkboxes ***
+                const outputHeaders = ["Channel"];
+                if (addGenreCheckbox.checked) outputHeaders.push("Genre");
+                if (addSubGenreCheckbox.checked) outputHeaders.push("Sub-Genre");
+                if (addBroadGenreCheckbox.checked) outputHeaders.push("Broad-Genre");
+                if (addFTANFTACheckbox.checked) outputHeaders.push("FTA/NFTA");
+                outputHeaders.push("Brand", "Buying", "M15+", "Affinity", "Region"); // Always include these
+
+                for (const regionName in regionalData) {
+                    const sheetData = [outputHeaders]; // Start with dynamically generated headers for each sheet
+                    regionalData[regionName].forEach(row => {
+                        const rowOutput = [];
+                        outputHeaders.forEach(header => {
+                            // Ensure correct property access for headers with special characters
+                            if (header === 'M15+') {
+                                rowOutput.push(row['M15+']);
+                            } else if (header === 'Sub-Genre') {
+                                rowOutput.push(row['Sub-Genre']);
+                            } else if (header === 'Broad-Genre') {
+                                rowOutput.push(row['Broad-Genre']);
+                            } else if (header === 'FTA/NFTA') {
+                                rowOutput.push(row['FTA/NFTA']);
+                            } else if (header === 'Affinity') {
+                                rowOutput.push(row.Affinity.toFixed(2));
+                            }
+                            else {
+                                rowOutput.push(row[header]);
+                            }
+                        });
+                        sheetData.push(rowOutput);
+                    });
+                    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+                    const sanitizedRegionName = regionName.replace(/[\\/?*[\]:]/g, '_').substring(0, 31);
+                    XLSX.utils.book_append_sheet(wb, ws, sanitizedRegionName);
+                    console.log(`--- DEBUG LOG: Sheet '${sanitizedRegionName}' added to workbook. ---`);
+                }
+
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                console.log("--- DEBUG LOG: Workbook written to binary array ---");
+
+                const blob = new Blob([wbout], { type: 'application/octet-stream' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'processed_plan_by_region.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                console.log("--- DEBUG LOG: Download triggered ---");
+
+                outputMessageDiv.textContent = 'Successfully processed and downloaded "processed_plan_by_region.xlsx"!';
+                outputMessageDiv.className = 'output-message success';
+                console.log("--- DEBUG LOG: Success message displayed ---");
+
+            } catch (error) {
+                console.error('--- DEBUG ERROR: Caught an unhandled error during processing ---', error);
+                outputMessageDiv.textContent = `An error occurred during processing: ${error.message}. Please verify your Excel file formats and column names. Ensure 'Channel', 'Regions', 'Brand', 'Buying', 'M15+' columns exist in your Channel Share Dump and 'Channel' in your Genre Lookup sheet.`;
+                outputMessageDiv.className = 'output-message error';
+            } finally {
+                processSheetsBtn.disabled = false;
+                console.log("--- DEBUG LOG: Finally block executed, button re-enabled ---");
+            }
+        });
+
+        checkFilesForButton();
+        console.log("--- DEBUG LOG: Initial checkFilesForButton executed ---");
+    </script>
+</body>
+</html>
